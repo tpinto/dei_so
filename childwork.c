@@ -1,4 +1,0 @@
-int child_work()
-{
-	
-}
