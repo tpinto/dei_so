@@ -16,17 +16,21 @@ int main(int argc, char *argv[])
 			return 0;
 		}
 		
-		int file = open(argv[2], O_RDONLY);
-		if (file == -1){
-			perror("Didn't found the input file");
-			return -1;
-		}else{
-			close(file);
-		}
+		//int file = open(argv[2], O_RDONLY);
+		//if (file == -1){
+		//	perror("Didn't found the input file");
+		//	return -1;
+		//}else{
+		//	close(file);
+		//}
 	}else{
 		usage(argv[0]);
 		return 0;
 	}
+	
+	char currentdir[255];
+	
+	getcwd(currentdir, 255);
 	
 	
 	int daemon_pipe;
@@ -39,7 +43,7 @@ int main(int argc, char *argv[])
 	
 	char stuff[MAX_PIPE_BUF_SIZE];
 	int pid = getpid();
-	sprintf(stuff, "%d %s %s %s", pid, argv[1], argv[2], argv[3]);
+	sprintf(stuff, "%d %c '%s/%s' '%s/%s'", pid, argv[1][1], currentdir, argv[2], currentdir, argv[3]);
 	
 	write(daemon_pipe, stuff, strlen(stuff));
 	

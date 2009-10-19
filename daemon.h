@@ -8,8 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/select.h>
 
 void exit_program(int sig);
 void clean_fifo();
-
-int clients_pipe;
