@@ -1,6 +1,6 @@
 /**
-*
-*
+* Tiago Henrique Pires Pinto (Trabalhador-Estudante), n.º 2006124596
+* Used about 15 hours on this assignment.
 **/
 
 #include "client.h"
