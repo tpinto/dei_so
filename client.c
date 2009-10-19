@@ -15,14 +15,6 @@ int main(int argc, char *argv[])
 			usage(argv[0]);
 			return 0;
 		}
-		
-		//int file = open(argv[2], O_RDONLY);
-		//if (file == -1){
-		//	perror("Didn't found the input file");
-		//	return -1;
-		//}else{
-		//	close(file);
-		//}
 	}else{
 		usage(argv[0]);
 		return 0;

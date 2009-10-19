@@ -18,6 +18,8 @@ int parent_to_res_pipe[2];
 int parent_to_con_pipe[2];
 int parent_to_mon_pipe[2];
 
+FILE * log_file;
+
 int main(int argc, char *argv[])
 {
 	(void) signal(SIGINT, exit_program);
@@ -30,6 +32,12 @@ int main(int argc, char *argv[])
 	pipe(parent_to_res_pipe);
 	pipe(parent_to_con_pipe);
 	pipe(parent_to_mon_pipe);
+	
+	log_file = fopen("output.log", "a");
+	if (log_file == NULL){
+		perror("ERR");
+		return 1;
+	}
 	
 	res_forked = fork();
 	if(res_forked == 0){		
@@ -73,6 +81,8 @@ int main(int argc, char *argv[])
 
 					int child = fork();
 					if(child == 0){
+						close(STDOUT_FILENO);
+						close(STDERR_FILENO);
 						//printf("Going to convert %s to 320x240. Output file: %s.\n", filein, fileout);
 						execlp("convert", "convert", "-resize", "320x240", filein, fileout, NULL);
 						perror("Error running convert");
@@ -85,10 +95,10 @@ int main(int argc, char *argv[])
 						char msg[50];
 						
 						if(status > 0){
-							sprintf(msg, "%d ERR", pid);
+							sprintf(msg, "%d ERR '%s' '%s'", pid, filein, fileout);
 							write(res_to_parent_pipe[1], msg, strlen(msg));
 						}else if(status == 0){
-							sprintf(msg, "%d OK", pid);
+							sprintf(msg, "%d OK '%s' '%s'", pid, filein, fileout);
 							write(res_to_parent_pipe[1], msg, strlen(msg));
 						}
 						//printf("status: %d, cena: %d, pid: %d\n", status, cena, pid);
@@ -144,6 +154,8 @@ int main(int argc, char *argv[])
 						
 						int child = fork();
 						if(child == 0){
+							close(STDOUT_FILENO);
+							close(STDERR_FILENO);
 							//printf("Going to convert %s to monochrome. Output file: %s.\n", filein, fileout);
 							execlp("convert", "convert", "-quiet", "-monochrome", filein, fileout, NULL);
 							exit(1);
@@ -155,10 +167,10 @@ int main(int argc, char *argv[])
 							char msg[50];
 							
 							if(status > 0){
-								sprintf(msg, "%d ERR", pid);
+								sprintf(msg, "%d ERR '%s' '%s'", pid, filein, fileout);
 								write(mon_to_parent_pipe[1], msg, strlen(msg));
 							}else if(status == 0){
-								sprintf(msg, "%d OK", pid);
+								sprintf(msg, "%d OK '%s' '%s'", pid, filein, fileout);
 								write(mon_to_parent_pipe[1], msg, strlen(msg));
 							}
 							//printf("status: %d, cena: %d, pid: %d\n", status, cena, pid);
@@ -212,6 +224,8 @@ int main(int argc, char *argv[])
 							
 							int child = fork();
 							if(child == 0){
+								close(STDOUT_FILENO);
+								close(STDERR_FILENO);
 								//printf("Going to convert %s. Output file: %s.\n", filein, fileout);
 								execlp("convert", "convert", filein, fileout, NULL);
 								perror("Error running convert");
@@ -224,10 +238,10 @@ int main(int argc, char *argv[])
 								char msg[50];
 
 								if(status > 0){
-									sprintf(msg, "%d ERR", pid);
+									sprintf(msg, "%d ERR '%s' '%s'", pid, filein, fileout);
 									write(con_to_parent_pipe[1], msg, strlen(msg));
 								}else if(status == 0){
-									sprintf(msg, "%d OK", pid);
+									sprintf(msg, "%d OK '%s' '%s'", pid, filein, fileout);
 									write(con_to_parent_pipe[1], msg, strlen(msg));
 								}
 								//printf("status: %d, cena: %d, pid: %d\n", status, cena, pid);
@@ -323,12 +337,16 @@ int main(int argc, char *argv[])
 					
 					int lpid;
 					char status[5];
-					
-					sscanf(msg, "%d %s", &lpid, status);
+					char filein[255];
+					char fileout[255];
+
+					sscanf(msg, "%d %s '%[^']' '%[^']'", &lpid, status, filein, fileout);
 					
 					if(strcmp(status, "OK") == 0){
+						fprintf(log_file, "%s\t%s\tConvert\tSuccess\n", filein, fileout);
 						kill(lpid, SIGUSR1);
 					}else if(strcmp(status, "ERR") == 0){
+						fprintf(log_file, "%s\t%s\tConvert\tError\n", filein, fileout);
 						kill(lpid, SIGUSR2);
 					}else{
 						printf("ERR");
@@ -344,12 +362,16 @@ int main(int argc, char *argv[])
 					
 					int lpid;
 					char status[5];
-					
-					sscanf(msg, "%d %s", &lpid, status);
+					char filein[255];
+					char fileout[255];
+
+					sscanf(msg, "%d %s '%[^']' '%[^']'", &lpid, status, filein, fileout);
 					
 					if(strcmp(status, "OK") == 0){
+						fprintf(log_file, "%s\t%s\tB&W\tSuccess\n", filein, fileout);
 						kill(lpid, SIGUSR1);
 					}else if(strcmp(status, "ERR") == 0){
+						fprintf(log_file, "%s\t%s\tB&W\tError\n", filein, fileout);
 						kill(lpid, SIGUSR2);
 					}else{
 						printf("ERR");
@@ -365,12 +387,16 @@ int main(int argc, char *argv[])
 
 						int lpid;
 						char status[5];
+						char filein[255];
+						char fileout[255];
 
-						sscanf(msg, "%d %s", &lpid, status);
+						sscanf(msg, "%d %s '%[^']' '%[^']'", &lpid, status, filein, fileout);
 
 						if(strcmp(status, "OK") == 0){
+							fprintf(log_file, "%s\t%s\tResize\tSuccess\n", filein, fileout);
 							kill(lpid, SIGUSR1);
 						}else if(strcmp(status, "ERR") == 0){
+							fprintf(log_file, "%s\t%s\tResize\tError\n", filein, fileout);
 							kill(lpid, SIGUSR2);
 						}else{
 							printf("ERR");
@@ -378,7 +404,6 @@ int main(int argc, char *argv[])
 
 						//printf("RECEIVED: \"%.*s\"\n", numread, msg);
 					}else if(FD_ISSET(clients_pipe, &readset)){
-					//printf("clients_pipe sent shit\n");
 					
 					numread = read(clients_pipe, stuff, MAX_PIPE_BUF_SIZE);
 					
@@ -414,6 +439,7 @@ int main(int argc, char *argv[])
 				}else{
 					printf("ERR");
 				}
+				fflush(log_file);
 			}
 				
 				while(wait(&status) > 0);
@@ -449,5 +475,6 @@ void clean_fifo(){
 	close(parent_to_res_pipe[1]);
 	close(parent_to_con_pipe[1]);
 	close(parent_to_mon_pipe[1]);
+	fclose(log_file);
 	unlink(NAMED_PIPE);
 }
