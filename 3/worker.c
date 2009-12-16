@@ -1,0 +1,1 @@
+#include "lasttweet.h"int main(){		char *st = lasttweet("cars");	printf("cars: %s\n", st);		return 0;}
