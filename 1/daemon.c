@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 							close(STDOUT_FILENO);
 							close(STDERR_FILENO);
 							//printf("Going to convert %s to monochrome. Output file: %s.\n", filein, fileout);
-							execlp("convert", "convert", "-quiet", "-monochrome", filein, fileout, NULL);
+							execlp("convert", "convert", "-monochrome", filein, fileout, NULL);
 							exit(1);
 						} //else{
 						
