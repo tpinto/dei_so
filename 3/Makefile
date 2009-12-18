@@ -10,4 +10,4 @@ worker: worker.c lasttweet.o
 	gcc ${LINKER_FLAGS} ${FLAGS} lasttweet.o worker.c -o worker
 
 clean:
-	rm -f lasttweet.o worker
+	rm -f lasttweet.o worker *.xml
